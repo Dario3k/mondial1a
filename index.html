@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bar Mondial 2026</title>
+<style>
+  :root {
+    --bg: #000000; --card: #121212; --red: #D32F2F; --red-dark: #9A0007;
+    --txt: #FFFFFF; --dim: #A0A0A0; --brd: #2A2A2A; --green: #2E7D32;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--txt); padding-bottom: 80px; }
+  
+  /* HEADER */
+  .header { background: var(--card); border-bottom: 3px solid var(--red); padding: 15px; text-align: center; position: sticky; top: 0; z-index: 100; }
+  .header img { max-height: 50px; max-width: 150px; margin-bottom: 8px; display: block; margin: 0 auto 8px; }
+  .header h1 { font-size: 1.2rem; color: var(--txt); text-transform: uppercase; letter-spacing: 1px; }
+  .header p { font-size: 0.75rem; color: var(--dim); margin-top: 4px; }
+  .lang-toggle { position: absolute; top: 15px; right: 15px; display: flex; gap: 5px; }
+  .lang-btn { background: transparent; border: 1px solid var(--brd); color: var(--dim); padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; }
+  .lang-btn.active { background: var(--red); color: white; border-color: var(--red); }
+
+  /* NAV */
+  .nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--brd); display: flex; z-index: 100; padding: 8px 0; }
+  .nav-btn { flex: 1; background: none; border: none; color: var(--dim); font-size: 0.65rem; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+  .nav-btn.active { color: var(--red); }
+  .nav-btn span.icon { font-size: 1.3rem; }
+
+  /* LAYOUT */
+  .container { max-width: 600px; margin: 0 auto; padding: 15px; }
+  .page { display: none; } .page.active { display: block; }
+
+  /* CARDS */
+  .card { background: var(--card); border: 1px solid var(--brd); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+  .card-title { font-size: 0.9rem; font-weight: 800; color: var(--red); margin-bottom: 15px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+
+  /* STATS */
+  .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+  .stat { background: var(--card); border: 1px solid var(--brd); border-radius: 10px; padding: 12px; text-align: center; }
+  .stat-val { font-size: 1.5rem; font-weight: 900; color: var(--txt); }
+  .stat-lbl { font-size: 0.65rem; color: var(--dim); text-transform: uppercase; margin-top: 4px; }
+
+  /* MATCHES */
+  .filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; }
+  .filter-btn { background: var(--card); border: 1px solid var(--brd); color: var(--dim); padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; white-space: nowrap; cursor: pointer; }
+  .filter-btn.active { background: var(--red); color: white; border-color: var(--red); }
+  
+  .match { display: grid; grid-template-columns: 40px 1fr 50px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--brd); gap: 10px; }
+  .match:last-child { border: none; }
+  .match-info { font-size: 0.7rem; color: var(--dim); }
+  .match-teams { font-weight: 700; font-size: 0.9rem; margin-top: 2px; }
+  .match-score { background: #1A1A1A; padding: 6px; border-radius: 6px; text-align: center; font-weight: 900; color: var(--red); font-size: 0.9rem; border: 1px solid var(--brd); }
+  .match-score.pending { color: var(--dim); font-size: 0.7rem; font-weight: 600; }
+
+  /* FORMS */
+  .form-group { margin-bottom: 15px; }
+  .form-group label { display: block; font-size: 0.75rem; color: var(--dim); margin-bottom: 6px; text-transform: uppercase; font-weight: 600; }
+  .form-group input, .form-group select { width: 100%; background: #0A0A0A; border: 1px solid var(--brd); color: var(--txt); padding: 14px; border-radius: 8px; font-size: 1rem; }
+  .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--red); }
+
+  /* PRONO BUTTONS */
+  .prono-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .prono-btn { background: #0A0A0A; border: 2px solid var(--brd); color: var(--txt); padding: 15px; border-radius: 8px; font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: 0.2s; }
+  .prono-btn.selected { border-color: var(--red); background: rgba(211, 47, 47, 0.15); color: var(--red); }
+
+  /* BUTTONS */
+  .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 800; cursor: pointer; text-transform: uppercase; }
+  .btn-red { background: var(--red); color: white; }
+  .btn-red:active { background: var(--red-dark); }
+  .btn-outline { background: transparent; border: 1px solid var(--brd); color: var(--dim); margin-top: 10px; }
+
+  /* RANKING */
+  .rank-row { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--brd); }
+  .rank-pos { width: 30px; font-weight: 900; color: var(--dim); font-size: 0.9rem; }
+  .rank-pos.gold { color: #FFD700; }
+  .rank-name { flex: 1; font-weight: 700; font-size: 0.95rem; }
+  .rank-stats { text-align: right; font-size: 0.8rem; }
+  .rank-pts { font-weight: 900; color: var(--red); font-size: 1.1rem; }
+  .rank-beers { color: var(--dim); font-size: 0.7rem; }
+
+  /* BET LIST */
+  .bet-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--brd); font-size: 0.85rem; }
+  .bet-status { font-size: 0.7rem; padding: 4px 8px; border-radius: 4px; font-weight: 700; }
+  .status-wait { background: #2A2A2A; color: var(--dim); }
+  .status-win { background: var(--green); color: white; }
+  .status-lose { background: var(--red-dark); color: white; }
+  .paid-toggle { font-size: 0.7rem; cursor: pointer; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--brd); }
+  .paid-yes { background: var(--green); color: white; border-color: var(--green); }
+  .paid-no { background: transparent; color: var(--dim); }
+
+  /* ADMIN */
+  .score-inputs { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 20px 0; }
+  .score-input { width: 60px; height: 60px; text-align: center; font-size: 1.5rem; font-weight: 900; background: #0A0A0A; border: 2px solid var(--red); border-radius: 8px; color: white; }
+  .vs-text { font-weight: 900; color: var(--dim); }
+  
+  .player-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--brd); }
+  .del-btn { background: none; border: none; color: var(--red); cursor: pointer; font-weight: 700; }
+
+  /* TOAST */
+  .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: var(--red); color: white; padding: 12px 24px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; z-index: 999; transition: transform 0.3s ease; box-shadow: 0 4px 15px rgba(211,47,47,0.4); }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<header class="header">
+  <!-- METTI IL TUO LOGO NELLA STESSA CARTELLA E CHIAMALO logo.png -->
+  <img src="logo.png" onerror="this.style.display='none'" alt="Logo Bar">
+  <h1 id="txt-title">Mondiali 2026</h1>
+  <p id="txt-sub">Scommesse al Bar • 1 Birra a puntata</p>
+  <div class="lang-toggle">
+    <button class="lang-btn active" onclick="setLang('IT')">IT</button>
+    <button class="lang-btn" onclick="setLang('FR')">FR</button>
+  </div>
+</header>
+
+<div class="container">
+  <!-- HOME -->
+  <div id="page-home" class="page active">
+    <div class="stats" id="stats-grid"></div>
+    <div class="card">
+      <div class="card-title" id="txt-next">⏭️ Prossima Partita</div>
+      <div id="next-match"></div>
+    </div>
+    <div class="card">
+      <div class="card-title" id="txt-rules">📖 Regole</div>
+      <div id="rules-list" style="font-size:0.85rem; color:var(--dim); line-height:1.6;"></div>
+    </div>
+  </div>
+
+  <!-- MATCHES -->
+  <div id="page-matches" class="page">
+    <div class="card">
+      <div class="card-title" id="txt-cal">⚽ Calendario</div>
+      <div class="filters" id="filters"></div>
+      <div id="matches-list"></div>
+    </div>
+  </div>
+
+  <!-- BET -->
+  <div id="page-bet" class="page">
+    <div class="card">
+      <div class="card-title" id="txt-bet">🍺 Piazza Scommessa</div>
+      <div class="form-group">
+        <label id="lbl-name">Il tuo nome</label>
+        <input type="text" id="inp-name" placeholder="Es. Marco">
+      </div>
+      <div class="form-group">
+        <label id="lbl-match">Partita</label>
+        <select id="sel-match"></select>
+      </div>
+      <div class="form-group">
+        <label id="lbl-prono">Pronostico</label>
+        <div class="prono-grid">
+          <button class="prono-btn" onclick="selectProno(this, '1')">1</button>
+          <button class="prono-btn" onclick="selectProno(this, 'X')">X</button>
+          <button class="prono-btn" onclick="selectProno(this, '2')">2</button>
+        </div>
+      </div>
+      <button class="btn btn-red" onclick="placeBet()" id="btn-confirm">Conferma Puntata</button>
+    </div>
+    <div class="card">
+      <div class="card-title" id="txt-mybets">📋 Le mie Scommesse</div>
+      <div id="my-bets"></div>
+    </div>
+  </div>
+
+  <!-- RANKING -->
+  <div id="page-rank" class="page">
+    <div class="card">
+      <div class="card-title" id="txt-rank">🥇 Classifica</div>
+      <div id="ranking-list"></div>
+    </div>
+    <div class="card" style="text-align:center; border-color:var(--red);">
+      <div style="font-size:0.75rem; color:var(--dim); text-transform:uppercase;" id="txt-pot">Montepremi Finale</div>
+      <div style="font-size:2rem; font-weight:900; color:var(--red);" id="pot-val">0 🍺</div>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="page-admin" class="page">
+    <div class="card">
+      <div class="card-title">⚙️ Inserisci Risultato</div>
+      <div class="form-group">
+        <select id="admin-sel" onchange="loadAdminMatch()"></select>
+      </div>
+      <div id="admin-editor" style="display:none;">
+        <div style="text-align:center; font-weight:700; margin-bottom:10px;" id="admin-teams"></div>
+        <div class="score-inputs">
+          <input type="number" id="score-a" class="score-input" min="0" value="0">
+          <span class="vs-text">-</span>
+          <input type="number" id="score-b" class="score-input" min="0" value="0">
+        </div>
+        <button class="btn btn-red" onclick="saveResult()">Salva Risultato</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">👤 Giocatori</div>
+      <div style="display:flex; gap:10px; margin-bottom:15px;">
+        <input type="text" id="new-player" placeholder="Nuovo nome..." style="flex:1; background:#0A0A0A; border:1px solid var(--brd); color:white; padding:10px; border-radius:6px;">
+        <button class="btn btn-red" style="width:auto; padding:10px 20px;" onclick="addPlayer()">+</button>
+      </div>
+      <div id="players-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💾 Backup Dati (IMPORTANTE)</div>
+      <p style="font-size:0.8rem; color:var(--dim); margin-bottom:15px;">I dati sono salvati in questo browser. Per sicurezza, scarica un backup. Se cambi telefono, carica il file.</p>
+      <button class="btn btn-outline" onclick="exportData()">📥 Scarica Backup</button>
+      <div style="margin-top:10px;">
+        <label class="btn btn-outline" style="display:block; text-align:center; cursor:pointer;">
+          📤 Carica Backup
+          <input type="file" accept=".json" onchange="importData(event)" style="display:none;">
+        </label>
+      </div>
+      <button class="btn btn-outline" style="border-color:var(--red); color:var(--red); margin-top:20px;" onclick="if(confirm('Cancellare TUTTO?')){localStorage.clear();location.reload();}">🗑️ Reset Totale</button>
+    </div>
+  </div>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="go('home', this)"><span class="icon">🏠</span>Home</button>
+  <button class="nav-btn" onclick="go('matches', this)"><span class="icon">⚽</span><span id="nav-m">Partite</span></button>
+  <button class="nav-btn" onclick="go('bet', this)"><span class="icon">🍺</span><span id="nav-b">Punta</span></button>
+  <button class="nav-btn" onclick="go('rank', this)"><span class="icon">🥇</span><span id="nav-r">Classifica</span></button>
+  <button class="nav-btn" onclick="go('admin', this)"><span class="icon">⚙️</span>Admin</button>
+</nav>
+
+<script>
+// ==========================================
+// DATA & STATE
+// ==========================================
+const TEAMS = [
+  ["🇲🇽 Mexique","🇲🇽 Messico"],["🇿🇦 Afr. du Sud","🇿🇦 Sudafrica"],["🇰🇷 Corée du Sud","🇰🇷 Corea del Sud"],["🇨🇿 Tchéquie","🇨🇿 Rep. Ceca"],
+  ["🇨🇦 Canada","🇨🇦 Canada"],["🇧🇦 Bosnie","🇧🇦 Bosnia"],["🇶🇦 Qatar","🇶🇦 Qatar"],["🇨🇭 Suisse","🇨🇭 Svizzera"],
+  ["🇧🇷 Brésil","🇧🇷 Brasile"],["🇲🇦 Maroc","🇲🇦 Marocco"],["🇭🇹 Haïti","🇭🇹 Haiti"],["🏴 Écosse","🏴 Scozia"],
+  ["🇺🇸 États-Unis","🇺🇸 Stati Uniti"],["🇵🇾 Paraguay","🇵🇾 Paraguay"],["🇦🇺 Australie","🇦🇺 Australia"],["🇹🇷 Turquie","🇹🇷 Turchia"],
+  ["🇩🇪 Allemagne","🇩🇪 Germania"],["🇨🇼 Curaçao","🇨🇼 Curaçao"],["🇨🇮 Côte d'Iv.","🇨🇮 Costa d'Av."],["🇪🇨 Équateur","🇪🇨 Ecuador"],
+  ["🇳🇱 Pays-Bas","🇳🇱 Olanda"],["🇯🇵 Japon","🇯🇵 Giappone"],["🇸🇪 Suède","🇸🇪 Svezia"],["🇹🇳 Tunisie","🇹🇳 Tunisia"],
+  ["🇧🇪 Belgique","🇧🇪 Belgio"],["🇪🇬 Égypte","🇪🇬 Egitto"],["🇮🇷 Iran","🇮🇷 Iran"],["🇳🇿 Nlle-Zélande","🇳🇿 N. Zelanda"],
+  ["🇪🇸 Espagne","🇪🇸 Spagna"],["🇨🇻 Cap-Vert","🇨🇻 Capo Verde"],["🇸🇦 Arabie S.","🇸🇦 Arabia S."],["🇺🇾 Uruguay","🇺🇾 Uruguay"],
+  ["🇫🇷 France","🇫🇷 Francia"],["🇸🇳 Sénégal","🇸🇳 Senegal"],["🇮🇶 Irak","🇮🇶 Iraq"],["🇳🇴 Norvège","🇳🇴 Norvegia"],
+  ["🇦🇷 Argentine","🇦🇷 Argentina"],["🇩🇿 Algérie","🇩🇿 Algeria"],["🇦🇹 Autriche","🇦🇹 Austria"],["🇯🇴 Jordanie","🇯🇴 Giordania"],
+  ["🇵🇹 Portugal","🇵🇹 Portogallo"],["🇨🇩 RD Congo","🇨🇩 RD Congo"],["🇺🇿 Ouzbékistan","🇺🇿 Uzbekistan"],["🇨🇴 Colombie","🇨🇴 Colombia"],
+  ["🏴 Angleterre","🏴 Inghilterra"],["🇭🇷 Croatie","🇭🇷 Croazia"],["🇬🇭 Ghana","🇬🇭 Ghana"],["🇵🇦 Panama","🇵🇦 Panama"]
+];
+
+// Generazione 104 Partite (Semplificata)
+const MATCHES = {};
+const GIDX = {A:0,B:4,C:8,D:12,E:16,F:20,G:24,H:28,I:32,J:36,K:40,L:44};
+const GROUPS = "ABCDEFGHIJKL".split("");
+const PAIRS = [[0,1],[2,3],[3,1],[0,2],[3,0],[1,2]];
+const DATES = [11,12,14,13,14,14,15,15,16,17,17,17]; // Giorni inizio
+
+let matchId = 1;
+GROUPS.forEach((g, gi) => {
+  PAIRS.forEach((p, pi) => {
+    MATCHES[matchId] = { id: matchId, phase: `Gr.${g}`, date: `${DATES[gi]+pi}/06`, tA: GIDX[g]+p[0], tB: GIDX[g]+p[1] };
+    matchId++;
+  });
+});
+// Fase finale fittizia per arrivare a 104
+for(let i=73; i<=104; i++) {
+  MATCHES[i] = { id: i, phase: i===104?"FINALE":"KO", date: `${(i%30)+1}/07`, tA: null, tB: null };
+}
+
+let LANG = "IT";
+let STATE = { bets: [], results: {}, players: [] };
+let selectedProno = null;
+
+// ==========================================
+// LOCAL STORAGE (SALVATAGGIO SICURO)
+// ==========================================
+function saveState() { localStorage.setItem('mondial_bar_v3', JSON.stringify(STATE)); }
+function loadState() {
+  const saved = localStorage.getItem('mondial_bar_v3');
+  if (saved) STATE = JSON.parse(saved);
+}
+
+// Backup/Restore
+function exportData() {
+  const blob = new Blob([JSON.stringify(STATE)], {type: "application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'backup_mondiale.json'; a.click();
+  toast("Backup scaricato!");
+}
+function importData(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      STATE = JSON.parse(ev.target.result);
+      saveState(); renderAll(); toast("Dati ripristinati!");
+    } catch(err) { toast("File non valido!"); }
+  };
+  reader.readAsText(file);
+}
+
+// ==========================================
+// UI HELPERS
+// ==========================================
+function $(id) { return document.getElementById(id); }
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+function getTeam(idx) { return idx !== null && TEAMS[idx] ? TEAMS[idx][LANG==='IT'?1:0] : "???"; }
+function getRes(r) { return r.a > r.b ? "1" : r.a < r.b ? "2" : "X"; }
+
+function go(page, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  $('page-'+page).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setLang(l) {
+  LANG = l;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent===l));
+  $('txt-title').textContent = l==='IT' ? "Mondiali 2026" : "Mondial 2026";
+  $('txt-sub').textContent = l==='IT' ? "Scommesse al Bar • 1 Birra a puntata" : "Paris au Bar • 1 Bière par pari";
+  $('txt-next').textContent = l==='IT' ? "⏭️ Prossima Partita" : "⏭️ Prochain Match";
+  $('txt-rules').textContent = l==='IT' ? "📖 Regole" : "📖 Règles";
+  $('txt-cal').textContent = l==='IT' ? "⚽ Calendario" : "⚽ Calendrier";
+  $('txt-bet').textContent = l==='IT' ? "🍺 Piazza Scommessa" : "🍺 Place ton Pari";
+  $('lbl-name').textContent = l==='IT' ? "Il tuo nome" : "Ton nom";
+  $('lbl-match').textContent = l==='IT' ? "Partita" : "Match";
+  $('lbl-prono').textContent = l==='IT' ? "Pronostico" : "Pronostic";
+  $('btn-confirm').textContent = l==='IT' ? "Conferma Puntata" : "Confirmer Pari";
+  $('txt-mybets').textContent = l==='IT' ? "📋 Le mie Scommesse" : "📋 Mes Paris";
+  $('txt-rank').textContent = l==='IT' ? "🥇 Classifica" : "🥇 Classement";
+  $('txt-pot').textContent = l==='IT' ? "Montepremi Finale" : "Cagnotte Finale";
+  $('nav-m').textContent = l==='IT' ? "Partite" : "Matchs";
+  $('nav-b').textContent = l==='IT' ? "Punta" : "Parie";
+  $('nav-r').textContent = l==='IT' ? "Classifica" : "Classement";
+  renderAll();
+}
+
+// ==========================================
+// RENDERING
+// ==========================================
+function renderAll() {
+  renderHome(); renderMatches(); renderBetForm(); renderMyBets(); renderRanking(); renderAdmin();
+}
+
+function renderHome() {
+  const played = Object.keys(STATE.results).length;
+  const nextId = Object.keys(MATCHES).find(id => !STATE.results[id]);
+  
+  $('stats-grid').innerHTML = `
+    <div class="stat"><div class="stat-val">${STATE.players.length}</div><div class="stat-lbl">${LANG==='IT'?'Giocatori':'Joueurs'}</div></div>
+    <div class="stat"><div class="stat-val">${played}/104</div><div class="stat-lbl">${LANG==='IT'?'Giocate':'Joués'}</div></div>
+    <div class="stat"><div class="stat-val">${STATE.bets.length} 🍺</div><div class="stat-lbl">${LANG==='IT'?'Puntate':'Paris'}</div></div>
+    <div class="stat"><div class="stat-val">${getLeader()}</div><div class="stat-lbl">Leader</div></div>
+  `;
+
+  if (nextId) {
+    const m = MATCHES[nextId];
+    $('next-match').innerHTML = `<div class="match"><div class="match-info">#${m.id}<br>${m.phase}</div><div class="match-teams">${getTeam(m.tA)} vs ${getTeam(m.tB)}</div><div class="match-score pending">${m.date}</div></div>`;
+  } else {
+    $('next-match').innerHTML = `<p style="color:var(--dim); text-align:center;">${LANG==='IT'?'Torneo Finito!':'Tournoi Fini!'}</p>`;
+  }
+
+  $('rules-list').innerHTML = LANG==='IT' ? 
+    "1. Scegli 1, X o 2 prima del fischio.<br>2. Ogni puntata vale 1 birra 🍺.<br>3. Chi indovina divide il piatto.<br>4. Nessuno indovina? Birre nel montepremi!" :
+    "1. Choisis 1, N ou 2 avant le match.<br>2. Chaque pari vaut 1 bière 🍺.<br>3. Les gagnants partagent le pot.<br>4. Personne ne gagne ? Bières dans la cagnotte !";
+}
+
+let currentFilter = "";
+function renderMatches() {
+  const phases = ["", "Gr.", "KO", "FINALE"];
+  $('filters').innerHTML = phases.map(p => `<button class="filter-btn ${currentFilter===p?'active':''}" onclick="currentFilter='${p}';renderMatches()">${p||'Tutte'}</button>`).join("");
+
+  let html = "";
+  for (let id in MATCHES) {
+    const m = MATCHES[id];
+    if (currentFilter && !m.phase.includes(currentFilter)) continue;
+    const r = STATE.results[id];
+    const score = r ? `${r.a} - ${r.b}` : m.date;
+    const cls = r ? "" : "pending";
+    html += `<div class="match">
+      <div class="match-info">#${m.id}<br>${m.phase}</div>
+      <div class="match-teams">${getTeam(m.tA)} vs ${getTeam(m.tB)}</div>
+      <div class="match-score ${cls}">${score}</div>
+    </div>`;
+  }
+  $('matches-list').innerHTML = html;
+}
+
+function renderBetForm() {
+  let opts = `<option value="">-- ${LANG==='IT'?'Scegli Partita':'Choisis Match'} --</option>`;
+  for (let id in MATCHES) {
+    if (STATE.results[id]) continue; // Solo partite non giocate
+    const m = MATCHES[id];
+    opts += `<option value="${m.id}">#${m.id} ${getTeam(m.tA)} vs ${getTeam(m.tB)}</option>`;
+  }
+  $('sel-match').innerHTML = opts;
+}
+
+function selectProno(btn, val) {
+  document.querySelectorAll('.prono-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedProno = val;
+}
+
+function placeBet() {
+  const name = $('inp-name').value.trim();
+  const mid = $('sel-match').value;
+  if (!name || !mid || !selectedProno) return toast(LANG==='IT'?"⚠️ Compila tutto!":"⚠️ Remplis tout!");
+  
+  if (STATE.bets.find(b => b.name.toLowerCase()===name.toLowerCase() && b.mid==mid)) {
+    return toast(LANG==='IT'?"⚠️ Hai già puntato!":"⚠️ Déjà parié!");
+  }
+
+  if (!STATE.players.includes(name)) STATE.players.push(name);
+  STATE.bets.push({ name, mid: parseInt(mid), prono: selectedProno, paid: false, ts: Date.now() });
+  saveState();
+  toast(LANG==='IT'?"✅ Puntata Registrata!":"✅ Pari Enregistré!");
+  
+  selectedProno = null;
+  document.querySelectorAll('.prono-btn').forEach(b => b.classList.remove('selected'));
+  $('sel-match').value = "";
+  renderAll();
+}
+
+function renderMyBets() {
+  const name = $('inp-name').value.trim().toLowerCase();
+  const bets = name ? STATE.bets.filter(b => b.name.toLowerCase()===name) : STATE.bets.slice(-10);
+  
+  if (!bets.length) {
+    $('my-bets').innerHTML = `<p style="color:var(--dim); text-align:center; padding:20px;">${LANG==='IT'?'Nessuna scommessa':'Aucun pari'}</p>`;
+    return;
+  }
+
+  let html = "";
+  bets.slice().reverse().forEach(b => {
+    const m = MATCHES[b.mid];
+    const r = STATE.results[b.mid];
+    let statusHtml = `<span class="bet-status status-wait">⏳</span>`;
+    if (r) {
+      const win = b.prono === getRes(r);
+      statusHtml = `<span class="bet-status ${win?'status-win':'status-lose'}">${win?'✅':'❌'}</span>`;
+    }
+    const paidCls = b.paid ? 'paid-yes' : 'paid-no';
+    const paidTxt = b.paid ? (LANG==='IT'?'Pagato':'Payé') : (LANG==='IT'?'Da pagare':'À payer');
+
+    html += `<div class="bet-item">
+      <div><strong>#${b.mid}</strong> ${getTeam(m.tA)} vs ${getTeam(m.tB)} <span style="color:var(--red); font-weight:900;">[${b.prono}]</span></div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        ${statusHtml}
+        <span class="paid-toggle ${paidCls}" onclick="togglePaid(${b.ts})">${paidTxt}</span>
+      </div>
+    </div>`;
+  });
+  $('my-bets').innerHTML = html;
+}
+
+function togglePaid(ts) {
+  const b = STATE.bets.find(x => x.ts === ts);
+  if (b) { b.paid = !b.paid; saveState(); renderMyBets(); }
+}
+
+function renderRanking() {
+  const scores = {};
+  STATE.players.forEach(p => scores[p] = { pts: 0, won: 0, bet: 0 });
+
+  STATE.bets.forEach(b => {
+    if (!scores[b.name]) scores[b.name] = { pts: 0, won: 0, bet: 0 };
+    scores[b.name].bet++;
+    const r = STATE.results[b.mid];
+    if (r && b.prono === getRes(r)) { scores[b.name].pts += 1; scores[b.name].won++; }
+  });
+
+  const sorted = Object.entries(scores).sort((a,b) => b[1].pts - a[1].pts);
+  let html = "";
+  let pot = STATE.players.length * 2; // Base pot
+  
+  sorted.forEach(([name, data], i) => {
+    const bal = data.won - data.bet;
+    pot += (data.bet - data.won); // Chi perde aggiunge al piatto
+    html += `<div class="rank-row">
+      <div class="rank-pos ${i===0?'gold':''}">${i+1}</div>
+      <div class="rank-name">${name}</div>
+      <div class="rank-stats">
+        <div class="rank-pts">${data.pts} PT</div>
+        <div class="rank-beers">${data.won}🍺 vinte • ${bal>=0?'+':''}${bal}🍺 saldo</div>
+      </div>
+    </div>`;
+  });
+  $('ranking-list').innerHTML = html || `<p style="color:var(--dim); text-align:center;">—</p>`;
+  $('pot-val').textContent = pot + " 🍺";
+}
+
+function getLeader() {
+  const scores = {};
+  STATE.bets.forEach(b => {
+    if(!scores[b.name]) scores[b.name]=0;
+    const r = STATE.results[b.mid];
+    if(r && b.prono===getRes(r)) scores[b.name]++;
+  });
+  const sorted = Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+  return sorted.length ? sorted[0][0] : "—";
+}
+
+function renderAdmin() {
+  let opts = `<option value="">-- Seleziona Partita --</option>`;
+  for (let id in MATCHES) {
+    const m = MATCHES[id];
+    opts += `<option value="${m.id}">#${m.id} ${getTeam(m.tA)} vs ${getTeam(m.tB)}</option>`;
+  }
+  $('admin-sel').innerHTML = opts;
+
+  let pl = "";
+  STATE.players.forEach(p => {
+    pl += `<div class="player-item"><span>${p}</span><button class="del-btn" onclick="removePlayer('${p}')">✕</button></div>`;
+  });
+  $('players-list').innerHTML = pl || `<p style="color:var(--dim);">Nessun giocatore</p>`;
+}
+
+function loadAdminMatch() {
+  const id = $('admin-sel').value;
+  $('admin-editor').style.display = id ? "block" : "none";
+  if (!id) return;
+  const m = MATCHES[id];
+  $('admin-teams').textContent = `${getTeam(m.tA)} vs ${getTeam(m.tB)}`;
+  const r = STATE.results[id];
+  $('score-a').value = r ? r.a : 0;
+  $('score-b').value = r ? r.b : 0;
+}
+
+function saveResult() {
+  const id = $('admin-sel').value;
+  if (!id) return;
+  STATE.results[id] = { a: parseInt($('score-a').value)||0, b: parseInt($('score-b').value)||0 };
+  saveState();
+  toast(LANG==='IT'?"✅ Risultato Salvato!":"✅ Résultat Sauvegardé!");
+  renderAll();
+}
+
+function addPlayer() {
+  const name = $('new-player').value.trim();
+  if (!name || STATE.players.includes(name)) return;
+  STATE.players.push(name);
+  $('new-player').value = "";
+  saveState(); renderAll();
+}
+
+function removePlayer(name) {
+  STATE.players = STATE.players.filter(p => p !== name);
+  STATE.bets = STATE.bets.filter(b => b.name !== name);
+  saveState(); renderAll();
+}
+
+// ==========================================
+// INIT
+// ==========================================
+loadState();
+renderAll();
+</script>
+</body>
+</html>
