@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏆 Mondiali 2026 - Scommesse Semplici</title>
+  <style>
+    :root {
+      --primary: #0B5394;
+      --accent: #FFD966;
+      --bg: #F8F9FA;
+      --card: #FFFFFF;
+      --text: #212529;
+      --success: #28A745;
+      --danger: #DC3545;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
+    .container { max-width: 600px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 24px; }
+    h1 { color: var(--primary); font-size: 1.8rem; margin-bottom: 8px; }
+    .subtitle { color: #666; font-size: 0.95rem; }
+    .card { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    label { display: block; font-weight: 600; margin-bottom: 6px; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #CED4DA; border-radius: 8px; font-size: 1rem; margin-bottom: 12px; }
+    .radio-group { display: flex; gap: 10px; margin-bottom: 16px; }
+    .radio-group label { flex: 1; text-align: center; padding: 10px; border: 2px solid #CED4DA; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+    .radio-group input { display: none; }
+    .radio-group input:checked + label { border-color: var(--primary); background: #EAF1F8; color: var(--primary); }
+    button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    button:hover { background: #08427A; }
+    button:disabled { background: #ADB5BD; cursor: not-allowed; }
+    .msg { padding: 10px; border-radius: 8px; margin-top: 10px; text-align: center; font-weight: 500; display: none; }
+    .msg.success { background: #D4EDDA; color: #155724; display: block; }
+    .msg.error { background: #F8D7DA; color: #721C24; display: block; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #DEE2E6; }
+    th { background: #F1F3F5; font-weight: 600; }
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
+    .badge-1 { background: #D1E7DD; color: #0F5132; }
+    .badge-x { background: #FFF3CD; color: #664D03; }
+    .badge-2 { background: #F8D7DA; color: #842029; }
+    .reset-btn { background: var(--danger); margin-top: 10px; }
+    .reset-btn:hover { background: #B02A37; }
+    @media (max-width: 480px) { .radio-group { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🏆 Mondiali 2026</h1>
+      <p class="subtitle">Scommesse semplici: 5€ a partita • Solo 1 / X / 2 • Max 1 puntata per match</p>
+    </header>
+
+    <div class="card">
+      <label for="playerName">👤 Il tuo nome</label>
+      <input type="text" id="playerName" placeholder="Es. Marco" autocomplete="off">
+
+      <label for="matchSelect">⚽ Scegli la partita</label>
+      <select id="matchSelect">
+        <option value="">-- Seleziona partita --</option>
+        <option value="1">🇲🇽 Messico vs 🇵🇱 Polonia</option>
+        <option value="2">🇫🇷 Francia vs 🇩🇰 Danimarca</option>
+        <option value="3">🇧🇷 Brasile vs 🇷🇸 Serbia</option>
+        <option value="4">🇩🇪 Germania vs 🇯🇵 Giappone</option>
+        <option value="5">🇦🇷 Argentina vs 🇲🇦 Marocco</option>
+      </select>
+
+      <label>🎯 Pronostico</label>
+      <div class="radio-group">
+        <input type="radio" name="prono" id="p1" value="1">
+        <label for="p1">1 (Casa)</label>
+        <input type="radio" name="prono" id="px" value="X">
+        <label for="px">X (Pareggio)</label>
+        <input type="radio" name="prono" id="p2" value="2">
+        <label for="p2">2 (Ospite)</label>
+      </div>
+
+      <button id="submitBtn">✅ Conferma Puntata (5€)</button>
+      <div id="msg" class="msg"></div>
+    </div>
+
+    <div class="card">
+      <h3>📊 Le tue scommesse</h3>
+      <table id="betsTable">
+        <thead><tr><th>Partita</th><th>Pronostico</th><th>Stato</th></tr></thead>
+        <tbody id="betsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>🥇 Classifica Punti</h3>
+      <table id="rankTable">
+        <thead><tr><th>Pos</th><th>Giocatore</th><th>Punti</th></tr></thead>
+        <tbody id="rankBody"></tbody>
+      </table>
+      <button class="reset-btn" id="resetBtn">🗑️ Reset Dati (Test)</button>
+    </div>
+  </div>
+
+  <script>
+    // --- CONFIGURAZIONE ---
+    const STAKE = 5; // € fissi a puntata
+    const MATCHES = {
+      "1": "🇲🇽 Messico vs 🇵🇱 Polonia",
+      "2": "🇫🇷 Francia vs 🇩🇰 Danimarca",
+      "3": "🇧🇷 Brasile vs 🇷🇸 Serbia",
+      "4": "🇩🇪 Germania vs 🇯🇵 Giappone",
+      "5": "🇦🇷 Argentina vs 🇲🇦 Marocco"
+    };
+
+    // --- STORAGE ---
+    function getBets() { return JSON.parse(localStorage.getItem('wc26_bets') || '[]'); }
+    function saveBets(bets) { localStorage.setItem('wc26_bets', JSON.stringify(bets)); }
+
+    // --- UI HELPERS ---
+    const msgEl = document.getElementById('msg');
+    function showMsg(text, type) {
+      msgEl.textContent = text;
+      msgEl.className = `msg ${type}`;
+      setTimeout(() => msgEl.style.display = 'none', 3000);
+    }
+
+    function renderBets() {
+      const bets = getBets();
+      const tbody = document.getElementById('betsBody');
+      tbody.innerHTML = '';
+      if (bets.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#888;">Nessuna scommessa ancora</td></tr>';
+        return;
+      }
+      bets.slice().reverse().forEach(b => {
+        const badgeClass = b.prono === '1' ? 'badge-1' : b.prono === 'X' ? 'badge-x' : 'badge-2';
+        tbody.innerHTML += `
+          <tr>
+            <td>${MATCHES[b.matchId]}</td>
+            <td><span class="badge ${badgeClass}">${b.prono}</span></td>
+            <td>${b.status || 'In attesa'}</td>
+          </tr>`;
+      });
+    }
+
+    function renderRank() {
+      const bets = getBets();
+      const points = {};
+      bets.forEach(b => {
+        if (!points[b.player]) points[b.player] = 0;
+        // Simulazione punti: 1 pt se pronostico indovinato (qui sempre 0 finché non inserisci risultati reali)
+        if (b.status === 'Vinto') points[b.player] += 1;
+      });
+      const sorted = Object.entries(points).sort((a,b) => b[1] - a[1]);
+      const tbody = document.getElementById('rankBody');
+      tbody.innerHTML = '';
+      if (sorted.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#888;">Nessun punto ancora</td></tr>';
+        return;
+      }
+      sorted.forEach((p, i) => {
+        tbody.innerHTML += `<tr><td>${i+1}</td><td>${p[0]}</td><td>${p[1]} pt</td></tr>`;
+      });
+    }
+
+    // --- LOGICA PRINCIPALE ---
+    document.getElementById('submitBtn').addEventListener('click', () => {
+      const player = document.getElementById('playerName').value.trim();
+      const matchId = document.getElementById('matchSelect').value;
+      const prono = document.querySelector('input[name="prono"]:checked')?.value;
+
+      if (!player) return showMsg('Inserisci il tuo nome', 'error');
+      if (!matchId) return showMsg('Seleziona una partita', 'error');
+      if (!prono) return showMsg('Scegli 1, X o 2', 'error');
+
+      const bets = getBets();
+      const alreadyBet = bets.some(b => b.player.toLowerCase() === player.toLowerCase() && b.matchId === matchId);
+      if (alreadyBet) return showMsg('Hai già scommesso su questa partita!', 'error');
+
+      bets.push({ player, matchId, prono, stake: STAKE, status: 'In attesa', date: new Date().toISOString() });
+      saveBets(bets);
+      showMsg(`✅ Puntata registrata! ${STAKE}€ su ${prono}`, 'success');
+      renderBets();
+      renderRank();
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      if (confirm('Sei sicuro di voler cancellare TUTTE le scommesse?')) {
+        localStorage.removeItem('wc26_bets');
+        renderBets();
+        renderRank();
+        showMsg('🗑️ Dati resettati', 'success');
+      }
+    });
+
+    // Init
+    renderBets();
+    renderRank();
+  </script>
+</body>
+</html>
